@@ -15,6 +15,7 @@
     <description>RemoteYourCar</description>
     <properties>
         <java.version>16</java.version>
+        <springfox.version>3.0.0</springfox.version>
     </properties>
     <dependencies>
 <!--        <dependency>-->
@@ -45,6 +46,11 @@
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>${springfox.version}</version>
         </dependency>
     </dependencies>
 

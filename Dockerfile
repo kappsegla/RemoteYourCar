@@ -13,4 +13,5 @@ ENTRYPOINT ["java","-cp","app:app/lib/*","se.iths.remoteyourcar.RemoteYourCarApp
 #mkdir -p target/dependency
 #cd target/dependency
 #jar -xf ../*.jar
+#cd back to project root
 #docker build -t remotecar/spring-boot-docker .
