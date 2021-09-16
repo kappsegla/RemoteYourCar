@@ -1,5 +1,7 @@
 package se.iths.remoteyourcar.routing;
 
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
@@ -17,11 +19,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class VehicleHandler {
+public class VehicleService {
+
     Map<Long, VehicleState> vehicleStateMap = new HashMap<>();
 
-    private VehicleState getNewOrExistingVehicleState(Long carId){
-        return vehicleStateMap.computeIfAbsent(carId,key -> {
+    private VehicleState getNewOrExistingVehicleState(Long carId) {
+        return vehicleStateMap.computeIfAbsent(carId, key -> {
             VehicleState vehicleState = new VehicleState();
             vehicleState.setCarId(carId);
             vehicleState.setLocked(false);
@@ -34,11 +37,9 @@ public class VehicleHandler {
         });
     }
 
-    public Mono<ServerResponse> driveState(ServerRequest request) {
-
-        var carId = Long.parseLong(request.pathVariable("id"));
+    public Mono<DriveState> getDriveState(@Parameter(in = ParameterIn.PATH) Long id) {
         var driveState = new DriveState();
-        driveState.setCarId(carId);
+        driveState.setCarId(id);
         driveState.setGpsAsOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
         driveState.setHeading(70);
         driveState.setLatitude(57.683688221408474);
@@ -48,39 +49,32 @@ public class VehicleHandler {
         driveState.setShiftState("P");
         driveState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(driveState));
+        return Mono.just(driveState);
     }
 
-    public Mono<ServerResponse> vehicleState(ServerRequest request){
-        var carId = Long.parseLong(request.pathVariable("id"));
-        VehicleState vehicleState = getNewOrExistingVehicleState(carId);
+    public Mono<VehicleState> getVehicleState(@Parameter(in = ParameterIn.PATH) Long id) {
+        VehicleState vehicleState = getNewOrExistingVehicleState(id);
         vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(vehicleState));
+        return Mono.just(vehicleState);
     }
-    public Mono<ServerResponse> lockDoors(ServerRequest request){
-        var carId = Long.parseLong(request.pathVariable("id"));
-        VehicleState vehicleState = getNewOrExistingVehicleState(carId);
+
+    public Mono<DoorResponse> lockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
+        VehicleState vehicleState = getNewOrExistingVehicleState(id);
         vehicleState.getDoorState().setAllLocked();
 
         DoorResponse response = new DoorResponse();
         response.setReason("");
         response.setResult(true);
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(response));
+        return Mono.just(response);
     }
 
-    public Mono<ServerResponse> unlockDoors(ServerRequest request){
-        var carId = Long.parseLong(request.pathVariable("id"));
-        VehicleState vehicleState = getNewOrExistingVehicleState(carId);
+    public Mono<DoorResponse> unLockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
+        VehicleState vehicleState = getNewOrExistingVehicleState(id);
         vehicleState.getDoorState().setAllUnLocked();
 
         DoorResponse response = new DoorResponse();
         response.setReason("");
         response.setResult(true);
-        return ServerResponse.ok().contentType(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(response));
+        return Mono.just(response);
     }
 }
