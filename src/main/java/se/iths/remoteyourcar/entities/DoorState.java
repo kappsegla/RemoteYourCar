@@ -20,6 +20,7 @@ public class DoorState {
 
     public void setAllLocked() {
         df_locked = pf_locked = dr_locked = pr_locked = ft_locked = rt_locked = true;
+
     }
 
     public void setAllUnLocked() {
