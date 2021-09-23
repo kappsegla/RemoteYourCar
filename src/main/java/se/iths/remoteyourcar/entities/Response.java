@@ -1,6 +1,6 @@
 package se.iths.remoteyourcar.entities;
 
-public class DoorResponse {
+public class Response {
     private String reason;
     private boolean result;
 

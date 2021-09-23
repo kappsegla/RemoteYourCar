@@ -1,26 +1,25 @@
 package se.iths.remoteyourcar.repositories;
 
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Mono;
+import se.iths.remoteyourcar.entities.ClimateState;
 import se.iths.remoteyourcar.entities.DoorState;
 import se.iths.remoteyourcar.entities.VehicleState;
-import se.iths.remoteyourcar.routing.VehicleService;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
 public class VehicleRepository {
 
-    Map<Long, VehicleState> vehicleStateMap = new ConcurrentHashMap<>();
+    Map<Long, VehicleState> vehicleStateMap = new HashMap<>();
+    Map<Long, ClimateState> climateStateMap = new HashMap<>();
 
     public VehicleState findById(Long carId) {
         return vehicleStateMap.computeIfAbsent(carId, key -> {
             VehicleState vehicleState = new VehicleState();
-            vehicleState.setCarId(carId);
+            vehicleState.setCarId(key);
             vehicleState.setLocked(false);
             vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
             DoorState doorState = new DoorState();
@@ -28,6 +27,14 @@ public class VehicleRepository {
             doorState.setDf_locked(false);  //Only driverside door unlocked
             vehicleState.setDoorState(doorState);
             return vehicleState;
+        });
+    }
+
+    public ClimateState findClimateStateById(Long carId) {
+        return climateStateMap.computeIfAbsent(carId, key -> {
+            ClimateState climateState = new ClimateState();
+            climateState.setCarId(key);
+            return climateState;
         });
     }
 }
