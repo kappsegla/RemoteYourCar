@@ -65,7 +65,7 @@ public class VehicleService {
     public Mono<Response> unLockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
         VehicleState vehicleState = repository.findById(id);
         vehicleState.getDoorState().setAllUnLocked();
-        //vehicleState.setLocked(false);  This is a bug, added for testing purposes.
+        vehicleState.setLocked(false);
 
         Response response = new Response();
         response.setReason("");
