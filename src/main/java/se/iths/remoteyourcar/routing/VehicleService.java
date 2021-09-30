@@ -8,6 +8,7 @@ import reactor.core.publisher.Mono;
 import se.iths.remoteyourcar.entities.*;
 import se.iths.remoteyourcar.repositories.VehicleRepository;
 
+import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
@@ -122,6 +123,12 @@ public class VehicleService {
     public Mono<Response> setTemperature(@Parameter(in = ParameterIn.PATH) Long id, float driver_temp, float passenger_temp) {
         ClimateState climateState = repository.findClimateStateById(id);
         climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+
+        if( driver_temp < climateState.getMin_avail_temp() || driver_temp > climateState.getMax_avail_temp()
+             || passenger_temp < climateState.getMin_avail_temp() || passenger_temp > climateState.getMax_avail_temp()
+        || driver_temp == -1 || passenger_temp == -1)
+            return Mono.empty();
+
         climateState.setDriver_temp_setting(driver_temp);
         climateState.setPassenger_temp_setting(passenger_temp);
 
