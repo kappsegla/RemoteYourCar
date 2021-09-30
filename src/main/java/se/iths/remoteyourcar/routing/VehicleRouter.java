@@ -16,8 +16,7 @@ import static org.springdoc.core.fn.builders.schema.Builder.schemaBuilder;
 import static org.springdoc.core.fn.builders.securityrequirement.Builder.securityRequirementBuilder;
 import static org.springdoc.webflux.core.fn.SpringdocRouteBuilder.route;
 import static org.springframework.web.reactive.function.BodyInserters.fromPublisher;
-import static org.springframework.web.reactive.function.server.ServerResponse.notFound;
-import static org.springframework.web.reactive.function.server.ServerResponse.ok;
+import static org.springframework.web.reactive.function.server.ServerResponse.*;
 
 @Configuration(proxyBeanMethods = false)
 public class VehicleRouter {
@@ -94,9 +93,9 @@ public class VehicleRouter {
         float passenger_temp = request.queryParam("passenger_temp")
                 .map(Float::valueOf)
                 .orElse(-1f);
-
-        return ok()
-                .body(vehicleService.setTemperature(Long.parseLong(request.pathVariable("id")), driver_temp, passenger_temp), Response.class);
+        return vehicleService.setTemperature(Long.parseLong(request.pathVariable("id")), driver_temp, passenger_temp)
+                .flatMap(result -> ok().bodyValue(result))
+                .switchIfEmpty(badRequest().build());
     }
 
     private Mono<ServerResponse> getVehicles(ServerRequest request) {
