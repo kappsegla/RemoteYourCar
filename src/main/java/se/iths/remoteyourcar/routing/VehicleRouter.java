@@ -1,7 +1,9 @@
 package se.iths.remoteyourcar.routing;
 
+import io.jsonwebtoken.Header;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -80,6 +82,23 @@ public class VehicleRouter {
     }
 
     private Mono<ServerResponse> getClimateState(ServerRequest request) {
+        if (Math.random() > 0.95) {
+            try {
+                Thread.sleep((long) (Math.random() * 1000));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            double response = Math.random();
+            if (response < 0.2)
+                return status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            if (response < 0.4)
+                return status(HttpStatus.TOO_MANY_REQUESTS).build();
+            if (response < 0.8)
+                return status(HttpStatus.GATEWAY_TIMEOUT).build();
+
+            return status(HttpStatus.I_AM_A_TEAPOT).build();
+        }
+
         return vehicleService.getClimateState(Long.parseLong(request.pathVariable("id")))
                 .flatMap(result -> ok().bodyValue(result))
                 .switchIfEmpty(notFound().build());
