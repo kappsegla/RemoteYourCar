@@ -10,6 +10,10 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 import se.iths.remoteyourcar.entities.Response;
 import se.iths.remoteyourcar.entities.Vehicle;
+import se.iths.remoteyourcar.monads.Exceptional;
+
+import java.util.Optional;
+import java.util.function.Predicate;
 
 import static org.springdoc.core.fn.builders.apiresponse.Builder.responseBuilder;
 import static org.springdoc.core.fn.builders.content.Builder.contentBuilder;
@@ -107,11 +111,13 @@ public class VehicleRouter {
     private Mono<ServerResponse> setTemperature(ServerRequest request) {
 
         float driver_temp = request.queryParam("driver_temp")
+                .filter(Predicate.not(String::isEmpty))
                 .map(Float::valueOf)
                 .orElse(-1f);
         float passenger_temp = request.queryParam("passenger_temp")
+                .filter(Predicate.not(String::isEmpty))
                 .map(Float::valueOf)
-                .orElse(-1f);
+                .orElse(-1.0f);
         return vehicleService.setTemperature(Long.parseLong(request.pathVariable("id")), driver_temp, passenger_temp)
                 .flatMap(result -> ok().bodyValue(result))
                 .switchIfEmpty(badRequest().build());
