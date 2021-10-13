@@ -2,19 +2,20 @@ package se.iths.remoteyourcar.routing;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import se.iths.remoteyourcar.entities.*;
 import se.iths.remoteyourcar.repositories.VehicleRepository;
 
-import javax.management.modelmbean.ModelMBeanNotificationBroadcaster;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
+import java.util.function.Predicate;
 
 @Component
 public class VehicleService {
@@ -30,20 +31,22 @@ public class VehicleService {
     }
 
     public Mono<DriveState> getDriveState(@Parameter(in = ParameterIn.PATH) Long id) {
-        if (id < 1 || id > 100)
-            return Mono.empty();
-        var driveState = new DriveState();
-        driveState.setCarId(id);
-        driveState.setGpsAsOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-        driveState.setHeading(70);
-        driveState.setLatitude(57.683688221408474);
-        driveState.setLongitude(12.00813226724387);
-        driveState.setSpeed(0);
-        driveState.setPower(0);
-        driveState.setShiftState("P");
-        driveState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-
-        return Mono.just(driveState);
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .map(i -> {
+                    var driveState = new DriveState();
+                    driveState.setCarId(id);
+                    driveState.setGpsAsOf(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+                    driveState.setHeading(70);
+                    driveState.setLatitude(57.683688221408474);
+                    driveState.setLongitude(12.00813226724387);
+                    driveState.setSpeed(0);
+                    driveState.setPower(0);
+                    driveState.setShiftState("P");
+                    driveState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+                    return driveState;
+                });
     }
 
     public Mono<VehicleState> getVehicleState(@Parameter(in = ParameterIn.PATH) Long id) {
@@ -79,17 +82,14 @@ public class VehicleService {
      * Vin generated with https://randomvin.com/
      */
     public Flux<Vehicle> getVehicles() {
-        Vehicle v1 = new Vehicle();
-        v1.setCarId(1);
-        v1.setVin("2C4RC1BG9DR681530");
-        v1.setName("ITHS");
-        v1.setColor("Black");
-        Vehicle v2 = new Vehicle();
-        v2.setCarId(2);
-        v2.setVin("5TFRY5F13CX149897");
-        v2.setName("ITHS");
-        v2.setColor("Red");
-        return Flux.just(v1, v2);
+        return getCredentials().map(i -> {
+            Vehicle v1 = new Vehicle();
+            v1.setCarId(i);
+            v1.setVin("2C4RC1BG9DR681530");
+            v1.setName("ITHS");
+            v1.setColor("Black");
+            return v1;
+        });
     }
 
     public Mono<ClimateState> getClimateState(@Parameter(in = ParameterIn.PATH) Long id) {
@@ -124,9 +124,9 @@ public class VehicleService {
         ClimateState climateState = repository.findClimateStateById(id);
         climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-        if( driver_temp < climateState.getMin_avail_temp() || driver_temp > climateState.getMax_avail_temp()
-             || passenger_temp < climateState.getMin_avail_temp() || passenger_temp > climateState.getMax_avail_temp()
-        || driver_temp == -1 || passenger_temp == -1)
+        if (driver_temp < climateState.getMin_avail_temp() || driver_temp > climateState.getMax_avail_temp()
+                || passenger_temp < climateState.getMin_avail_temp() || passenger_temp > climateState.getMax_avail_temp()
+                || driver_temp == -1 || passenger_temp == -1)
             return Mono.empty();
 
         climateState.setDriver_temp_setting(driver_temp);
@@ -136,5 +136,32 @@ public class VehicleService {
         response.setReason("");
         response.setResult(true);
         return Mono.just(response);
+    }
+
+//    public Flux<String> getTest() {
+//        return getCredentials().map(String::valueOf);
+//    }
+
+    public Mono<String> getCurrentUser() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .map(Object::toString);
+    }
+
+    public Flux<String> getAuthorities() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getAuthorities)
+                .flatMapMany(Flux::fromIterable)
+                .map(GrantedAuthority::getAuthority);
+    }
+
+    public Flux<Long> getCredentials() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getCredentials)
+                .map(c -> (List<Long>) c)
+                .flatMapMany(Flux::fromIterable);
     }
 }

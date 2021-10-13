@@ -8,8 +8,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
@@ -29,15 +29,20 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
             }
             //Check so it hasn't expired
             Date expires = claims.getBody().getExpiration();
-            if( expires.before(new Date(System.currentTimeMillis())) )
+            if (expires.before(new Date(System.currentTimeMillis())))
                 return Mono.empty();
 
             //Get list of roles for this user
-            ArrayList<String> perms = (ArrayList<String>) claims.getBody().get("authorities");
+            List<String> perms = (List<String>) claims.getBody().get("authorities");
 
-            var authorities = perms.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
+            var authorities = perms.stream().map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
 
-            return Mono.just(new UsernamePasswordAuthenticationToken(claims.getBody().getSubject(), null, authorities));
+            var creds = (List<String>) claims.getBody().get("vehicles");
+
+            var credentials = creds.stream().map(Long::valueOf).toList();
+
+            return Mono.just(new UsernamePasswordAuthenticationToken(claims.getBody().getSubject(), credentials, authorities));
         } catch (Exception e) {
             return Mono.empty();
         }
