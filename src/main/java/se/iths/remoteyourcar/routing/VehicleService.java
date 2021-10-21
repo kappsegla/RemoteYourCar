@@ -50,31 +50,46 @@ public class VehicleService {
     }
 
     public Mono<VehicleState> getVehicleState(@Parameter(in = ParameterIn.PATH) Long id) {
-        VehicleState vehicleState = repository.findById(id);
-        vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-        return Mono.just(vehicleState);
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .map(i -> {
+                    VehicleState vehicleState = repository.findById(id);
+                    vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+                    return vehicleState;
+                });
     }
 
     public Mono<Response> lockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
-        VehicleState vehicleState = repository.findById(id);
-        vehicleState.getDoorState().setAllLocked();
-        vehicleState.setLocked(true);
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .map(i -> {
+                    VehicleState vehicleState = repository.findById(id);
+                    vehicleState.getDoorState().setAllLocked();
+                    vehicleState.setLocked(true);
 
-        Response response = new Response();
-        response.setReason("");
-        response.setResult(true);
-        return Mono.just(response);
+                    Response response = new Response();
+                    response.setReason("");
+                    response.setResult(true);
+                    return response;
+                });
     }
 
     public Mono<Response> unLockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
-        VehicleState vehicleState = repository.findById(id);
-        vehicleState.getDoorState().setAllUnLocked();
-        vehicleState.setLocked(false);
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .map(i -> {
+                    VehicleState vehicleState = repository.findById(id);
+                    vehicleState.getDoorState().setAllUnLocked();
+                    vehicleState.setLocked(false);
 
-        Response response = new Response();
-        response.setReason("");
-        response.setResult(true);
-        return Mono.just(response);
+                    Response response = new Response();
+                    response.setReason("");
+                    response.setResult(true);
+                    return response;
+                });
     }
 
     /**
@@ -82,65 +97,64 @@ public class VehicleService {
      * Vin generated with https://randomvin.com/
      */
     public Flux<Vehicle> getVehicles() {
-        return getCredentials().map(i -> {
-            Vehicle v1 = new Vehicle();
-            v1.setCarId(i);
-            v1.setVin("2C4RC1BG9DR681530");
-            v1.setName("ITHS");
-            v1.setColor("Black");
-            return v1;
-        });
+        return getCredentials().flatMap(i -> repository.findVehicleById(i));
     }
 
     public Mono<ClimateState> getClimateState(@Parameter(in = ParameterIn.PATH) Long id) {
-        ClimateState climateState = repository.findClimateStateById(id);
-        if (climateState.getTimestamp() - LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) > 60 * 60) {
-            //More than one hour since last check. Temperature has changed alot.
-            if (Math.random() < 0.5) {
-                climateState.setInside_temp(climateState.getInside_temp() + random.nextInt(5));
-                climateState.setOutside_temp(climateState.getOutside_temp() + random.nextInt(5));
-            } else {
-                climateState.setInside_temp(climateState.getInside_temp() - random.nextInt(5));
-                climateState.setOutside_temp(climateState.getOutside_temp() - random.nextInt(5));
-            }
-        }
-        if (Math.random() < 0.1) {
-            if (Math.random() < 0.5)
-                climateState.setInside_temp(climateState.getInside_temp() + 0.5f);
-            else
-                climateState.setInside_temp(climateState.getInside_temp() - 0.5f);
-        }
-        if (Math.random() < 0.1) {
-            if (Math.random() < 0.5)
-                climateState.setOutside_temp(climateState.getOutside_temp() + 0.5f);
-            else
-                climateState.setOutside_temp(climateState.getOutside_temp() - 0.5f);
-        }
-        climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-        return Mono.just(climateState);
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .map(i -> {
+                    ClimateState climateState = repository.findClimateStateById(id);
+                    if (climateState.getTimestamp() - LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) > 60 * 60) {
+                        //More than one hour since last check. Temperature has changed alot.
+                        if (Math.random() < 0.5) {
+                            climateState.setInside_temp(climateState.getInside_temp() + random.nextInt(5));
+                            climateState.setOutside_temp(climateState.getOutside_temp() + random.nextInt(5));
+                        } else {
+                            climateState.setInside_temp(climateState.getInside_temp() - random.nextInt(5));
+                            climateState.setOutside_temp(climateState.getOutside_temp() - random.nextInt(5));
+                        }
+                    }
+                    if (Math.random() < 0.1) {
+                        if (Math.random() < 0.5)
+                            climateState.setInside_temp(climateState.getInside_temp() + 0.5f);
+                        else
+                            climateState.setInside_temp(climateState.getInside_temp() - 0.5f);
+                    }
+                    if (Math.random() < 0.1) {
+                        if (Math.random() < 0.5)
+                            climateState.setOutside_temp(climateState.getOutside_temp() + 0.5f);
+                        else
+                            climateState.setOutside_temp(climateState.getOutside_temp() - 0.5f);
+                    }
+                    climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+                    return climateState;
+                });
     }
 
     public Mono<Response> setTemperature(@Parameter(in = ParameterIn.PATH) Long id, float driver_temp, float passenger_temp) {
-        ClimateState climateState = repository.findClimateStateById(id);
-        climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+        return getCredentials()
+                .filter(Predicate.isEqual(id))
+                .next()
+                .flatMap(i -> {
+                    ClimateState climateState = repository.findClimateStateById(id);
+                    climateState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
 
-        if (driver_temp < climateState.getMin_avail_temp() || driver_temp > climateState.getMax_avail_temp()
-                || passenger_temp < climateState.getMin_avail_temp() || passenger_temp > climateState.getMax_avail_temp()
-                || driver_temp == -1 || passenger_temp == -1)
-            return Mono.empty();
+                    if (driver_temp < climateState.getMin_avail_temp() || driver_temp > climateState.getMax_avail_temp()
+                            || passenger_temp < climateState.getMin_avail_temp() || passenger_temp > climateState.getMax_avail_temp()
+                            || driver_temp == -1 || passenger_temp == -1)
+                         return Mono.empty();
 
-        climateState.setDriver_temp_setting(driver_temp);
-        climateState.setPassenger_temp_setting(passenger_temp);
+                    climateState.setDriver_temp_setting(driver_temp);
+                    climateState.setPassenger_temp_setting(passenger_temp);
 
-        Response response = new Response();
-        response.setReason("");
-        response.setResult(true);
-        return Mono.just(response);
+                    Response response = new Response();
+                    response.setReason("");
+                    response.setResult(true);
+                    return Mono.just(response);
+                });
     }
-
-//    public Flux<String> getTest() {
-//        return getCredentials().map(String::valueOf);
-//    }
 
     public Mono<String> getCurrentUser() {
         return ReactiveSecurityContextHolder.getContext()

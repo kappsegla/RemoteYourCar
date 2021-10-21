@@ -42,6 +42,10 @@ public class SecurityConfiguration {
                 .authorizeExchange()
                 .pathMatchers(HttpMethod.GET,"/api/1/vehicles").authenticated()
                 .pathMatchers(HttpMethod.GET,"/api/1/vehicles/*/data_request/drive_state").authenticated()
+                .pathMatchers(HttpMethod.GET,"/api/1/vehicles/*/data_request/vehicle_state").authenticated()
+                .pathMatchers(HttpMethod.GET,"/api/1/vehicles/*/data_request/climate_state").authenticated()
+                .pathMatchers(HttpMethod.POST,"/api/1/vehicles/*/command/door_lock").authenticated()
+                .pathMatchers(HttpMethod.POST,"/api/1/vehicles/*/command/door_unlock").authenticated()
                 .anyExchange().permitAll()
                 .and().build();
     }
