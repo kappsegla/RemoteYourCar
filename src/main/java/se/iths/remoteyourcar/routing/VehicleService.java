@@ -82,14 +82,7 @@ public class VehicleService {
      * Vin generated with https://randomvin.com/
      */
     public Flux<Vehicle> getVehicles() {
-        return getCredentials().map(i -> {
-            Vehicle v1 = new Vehicle();
-            v1.setCarId(i);
-            v1.setVin("2C4RC1BG9DR681530");
-            v1.setName("ITHS");
-            v1.setColor("Black");
-            return v1;
-        });
+        return getCredentials().flatMap(i -> repository.findVehicleById(i));
     }
 
     public Mono<ClimateState> getClimateState(@Parameter(in = ParameterIn.PATH) Long id) {
