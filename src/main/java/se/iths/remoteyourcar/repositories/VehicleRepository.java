@@ -3,11 +3,13 @@ package se.iths.remoteyourcar.repositories;
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 import se.iths.remoteyourcar.entities.ClimateState;
 import se.iths.remoteyourcar.entities.DoorState;
 import se.iths.remoteyourcar.entities.Vehicle;
 import se.iths.remoteyourcar.entities.VehicleState;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.HashMap;
@@ -69,7 +71,7 @@ public class VehicleRepository {
         randomNumber = new Random().nextInt(11);
         v1.setColor(colors.get(randomNumber));
 
-        return vin.flatMap(s -> { v1.setVin(s); return Mono.just(v1);});
+        return vin.flatMap(s -> { v1.setVin(s.substring(1).trim()); return Mono.just(v1);});
     }
 
     private Mono<String> getRandomVin() {
@@ -77,6 +79,7 @@ public class VehicleRepository {
 
         return client.get().uri("https://randomvin.com/getvin.php?type=fake")
                 .retrieve()
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)));
     }
 }
