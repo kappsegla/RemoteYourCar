@@ -6,5 +6,4 @@ import se.iths.remoteyourcar.entities.Vehicle;
 import java.util.Optional;
 
 public interface VehicleCrudRepository extends CrudRepository<Vehicle, Long> {
-    Optional<Vehicle> findByCarId(Long carId);
 }

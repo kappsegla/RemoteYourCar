@@ -21,23 +21,32 @@ public class VehicleRepository {
     Map<Long, ClimateState> climateStateMap = new HashMap<>();
 
     VehicleCrudRepository vehicleCrudRepository;
+    VehicleStateRepository vehicleStateRepository;
 
-    public VehicleRepository(VehicleCrudRepository repository) {
-        vehicleCrudRepository = repository;
+    public VehicleRepository(VehicleCrudRepository vehicleCrudRepository, VehicleStateRepository vehicleStateRepository) {
+        this.vehicleCrudRepository = vehicleCrudRepository;
+        this.vehicleStateRepository = vehicleStateRepository;
     }
 
-    public VehicleState findById(Long carId) {
-        return vehicleStateMap.computeIfAbsent(carId, key -> {
-            VehicleState vehicleState = new VehicleState();
-            vehicleState.setCarId(key);
-            vehicleState.setLocked(false);
-            vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-            DoorState doorState = new DoorState();
-            doorState.setAllLocked();
-            doorState.setDf_locked(false);  //Only driverside door unlocked
-            vehicleState.setDoorState(doorState);
-            return vehicleState;
-        });
+    public Mono<VehicleState> findVehicleStateById(Long carId) {
+        Optional<VehicleState> vehicleState = vehicleStateRepository.findById(carId);
+        return vehicleState.map(Mono::just)
+                .orElseGet(
+                        () -> createNewVehicleState(carId)
+                                .doOnNext(vehicleStateRepository::save));
+    }
+
+    private Mono<VehicleState> createNewVehicleState(Long key) {
+        VehicleState vehicleState = new VehicleState();
+        vehicleState.setCarId(key);
+        vehicleState.setLocked(false);
+        vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+        DoorState doorState = new DoorState();
+        doorState.setCarID(key);
+        doorState.setAllLocked();
+        doorState.setDf_locked(false);  //Only driverside door unlocked
+        vehicleState.setDoorState(doorState);
+        return Mono.just(vehicleState);
     }
 
     public ClimateState findClimateStateById(Long carId) {
@@ -49,11 +58,11 @@ public class VehicleRepository {
     }
 
     public Mono<Vehicle> findVehicleById(Long carId) {
-        Optional<Vehicle> vehicle = vehicleCrudRepository.findByCarId(carId);
+        Optional<Vehicle> vehicle = vehicleCrudRepository.findById(carId);
         return vehicle.map(Mono::just).orElseGet(
                 () -> createNewVehicle(carId).doOnNext(v -> {
-            vehicleCrudRepository.save(v);
-        }));
+                    vehicleCrudRepository.save(v);
+                }));
     }
 
     private Mono<Vehicle> createNewVehicle(Long carId) {
@@ -87,5 +96,9 @@ public class VehicleRepository {
                 .retrieve()
                 .bodyToMono(String.class)
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)));
+    }
+
+    public VehicleState saveVehicleState(VehicleState vehicleState) {
+        return vehicleStateRepository.save(vehicleState);
     }
 }

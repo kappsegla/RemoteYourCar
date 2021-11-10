@@ -51,21 +51,20 @@ public class VehicleService {
         return getCredentials()
                 .filter(Predicate.isEqual(id))
                 .next()
-                .map(i -> {
-                    VehicleState vehicleState = repository.findById(id);
-                    vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
-                    return vehicleState;
-                });
+                .flatMap(i -> repository.findVehicleStateById(id));
     }
 
     public Mono<Response> lockDoors(@Parameter(in = ParameterIn.PATH) Long id) {
         return getCredentials()
                 .filter(Predicate.isEqual(id))
                 .next()
-                .map(i -> {
-                    VehicleState vehicleState = repository.findById(id);
+                .flatMap(i -> repository.findVehicleStateById(i))
+                .map(vehicleState -> {
                     vehicleState.getDoorState().setAllLocked();
                     vehicleState.setLocked(true);
+                    vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+
+                    repository.saveVehicleState(vehicleState);
 
                     Response response = new Response();
                     response.setReason("");
@@ -78,10 +77,13 @@ public class VehicleService {
         return getCredentials()
                 .filter(Predicate.isEqual(id))
                 .next()
-                .map(i -> {
-                    VehicleState vehicleState = repository.findById(id);
+                .flatMap(i -> repository.findVehicleStateById(i))
+                .map(vehicleState -> {
                     vehicleState.getDoorState().setAllUnLocked();
                     vehicleState.setLocked(false);
+                    vehicleState.setTimestamp(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC));
+
+                    repository.saveVehicleState(vehicleState);
 
                     Response response = new Response();
                     response.setReason("");

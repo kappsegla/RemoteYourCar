@@ -1,6 +1,15 @@
 package se.iths.remoteyourcar.entities;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+
+@Entity
 public class DoorState {
+    @Id
+    @Column(name = "car_id", nullable = false)
+    private Long carID;
+
     private boolean df_open;
     private boolean df_locked;
     private boolean pf_open;
@@ -13,6 +22,14 @@ public class DoorState {
     private boolean ft_locked;
     private boolean rt_open;
     private boolean rt_locked;
+
+    public Long getCarID() {
+        return carID;
+    }
+
+    public void setCarID(Long carID) {
+        this.carID = carID;
+    }
 
     public void setAllOpen() {
         df_open = pf_open = dr_open = pr_open = ft_open = rt_open = true;

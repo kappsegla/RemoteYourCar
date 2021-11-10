@@ -1,5 +1,7 @@
 package se.iths.remoteyourcar.entities;
 
+import javax.persistence.*;
+
 /**
  * df - driver front
  * dr - driver rear
@@ -8,12 +10,17 @@ package se.iths.remoteyourcar.entities;
  * ft - front trunk
  * rt - rear trunk
  */
+@Entity
+@Table(name="vehilcestates")
 public class VehicleState {
-
+    @Id
+    @Column(name = "car_id", nullable = false)
     private long carId;
     private long timestamp;
 
     private boolean locked;
+
+    @OneToOne(cascade = CascadeType.ALL)
     private DoorState doorState;
 
     public long getCarId() {
