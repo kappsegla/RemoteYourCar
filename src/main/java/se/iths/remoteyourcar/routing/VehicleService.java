@@ -20,8 +20,6 @@ import java.util.function.Predicate;
 @Component
 public class VehicleService {
 
-    Map<Long, VehicleState> vehicleStateMap = new HashMap<>();
-
     private VehicleRepository repository;
 
     Random random = new Random();

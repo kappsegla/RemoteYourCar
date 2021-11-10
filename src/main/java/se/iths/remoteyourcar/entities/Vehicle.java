@@ -1,10 +1,26 @@
 package se.iths.remoteyourcar.entities;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name="vehicles")
 public class Vehicle {
-     private long carId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+
+    private long carId;
      private String vin;
      private String name;
      private String color;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public long getCarId() {
         return carId;

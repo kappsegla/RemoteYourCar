@@ -12,17 +12,19 @@ import se.iths.remoteyourcar.entities.VehicleState;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 @Repository
 public class VehicleRepository {
 
     Map<Long, VehicleState> vehicleStateMap = new HashMap<>();
     Map<Long, ClimateState> climateStateMap = new HashMap<>();
-    Map<Long, Vehicle> vehicleMap = new HashMap<>();
+
+    VehicleCrudRepository vehicleCrudRepository;
+
+    public VehicleRepository(VehicleCrudRepository repository) {
+        vehicleCrudRepository = repository;
+    }
 
     public VehicleState findById(Long carId) {
         return vehicleStateMap.computeIfAbsent(carId, key -> {
@@ -47,10 +49,11 @@ public class VehicleRepository {
     }
 
     public Mono<Vehicle> findVehicleById(Long carId) {
-        if (vehicleMap.containsKey(carId))
-            return Mono.just(vehicleMap.get(carId));
-        else
-            return createNewVehicle(carId).doOnNext(vehicle -> vehicleMap.put(vehicle.getCarId(),vehicle));
+        Optional<Vehicle> vehicle = vehicleCrudRepository.findByCarId(carId);
+        return vehicle.map(Mono::just).orElseGet(
+                () -> createNewVehicle(carId).doOnNext(v -> {
+            vehicleCrudRepository.save(v);
+        }));
     }
 
     private Mono<Vehicle> createNewVehicle(Long carId) {
@@ -71,7 +74,10 @@ public class VehicleRepository {
         randomNumber = new Random().nextInt(11);
         v1.setColor(colors.get(randomNumber));
 
-        return vin.flatMap(s -> { v1.setVin(s.substring(1).trim()); return Mono.just(v1);});
+        return vin.flatMap(s -> {
+            v1.setVin(s.substring(1).trim());
+            return Mono.just(v1);
+        });
     }
 
     private Mono<String> getRandomVin() {
