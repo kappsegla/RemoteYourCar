@@ -2,7 +2,9 @@ package se.iths.remoteyourcar.repositories;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.retry.Repeat;
 import reactor.util.retry.Retry;
 import se.iths.remoteyourcar.entities.ClimateState;
 import se.iths.remoteyourcar.entities.DoorState;
@@ -84,7 +86,7 @@ public class VehicleRepository {
         v1.setColor(colors.get(randomNumber));
 
         return vin.flatMap(s -> {
-            v1.setVin(s.substring(1).trim());
+            v1.setVin(s);
             return Mono.just(v1);
         });
     }
@@ -95,6 +97,11 @@ public class VehicleRepository {
         return client.get().uri("https://randomvin.com/getvin.php?type=fake")
                 .retrieve()
                 .bodyToMono(String.class)
+                .map(s->s.replaceAll("[^a-zA-Z0-9]", ""))
+                .filter(response -> !response.isEmpty())
+                .repeatWhenEmpty(Repeat.onlyIf(r -> true)
+                        .fixedBackoff(Duration.ofSeconds(1))
+                        .timeout(Duration.ofSeconds(5)))
                 .retryWhen(Retry.backoff(3, Duration.ofSeconds(1)));
     }
 
