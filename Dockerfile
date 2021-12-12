@@ -1,4 +1,4 @@
-FROM adoptopenjdk:16-jre
+FROM eclipse-temurin:17
 RUN adduser --system --group spring
 USER spring:spring
 ARG DEPENDENCY=target/dependency
