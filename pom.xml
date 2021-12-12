@@ -14,7 +14,7 @@
     <name>RemoteYourCar</name>
     <description>RemoteYourCar</description>
     <properties>
-        <java.version>16</java.version>
+        <java.version>17</java.version>
         <springfox.version>3.0.0</springfox.version>
     </properties>
     <dependencies>
