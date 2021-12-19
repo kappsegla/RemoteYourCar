@@ -1,7 +1,7 @@
 FROM eclipse-temurin:17
 RUN adduser --system --group spring
 USER spring:spring
-ARG DEPENDENCY=target/dependency
+#ARG DEPENDENCY=target/dependency
 EXPOSE 8080
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
