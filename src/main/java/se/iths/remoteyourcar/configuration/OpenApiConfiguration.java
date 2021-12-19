@@ -11,7 +11,6 @@ import io.swagger.v3.oas.models.parameters.RequestBody;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.tags.Tag;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,22 +19,18 @@ import java.util.List;
 @Configuration
 public class OpenApiConfiguration {
 
-    static record UserInfo(String username, String password) {}
-    static record TokenResponse(String access_token,String token_type, int expires_in){}
+    record UserInfo(String username, String password) {}
+    record TokenResponse(String access_token,String token_type, int expires_in){}
 
     @Bean
     public OpenAPI springOpenApi() {
         final String securitySchemeName = "bearerAuth";
-        Schema schema = new Schema()
+        var schema = new Schema<UserInfo>()
                 .title("UserInfo")
-                .addProperties("username", new StringSchema())
-                .addProperties("password", new StringSchema())
                 .example(new UserInfo("test@test.nu", "pass"));
 
-        Schema response = new Schema()
-                .addProperties("access_token", new StringSchema())
-                .addProperties("token_type", new StringSchema())
-                .addProperties("expires_in", new IntegerSchema())
+        var response = new Schema<TokenResponse>()
+                .title("TokenResponse")
                 .example(new TokenResponse("eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJrYWxsZS5hbmthQGFua2Vib3JnLm51IiwiaWF0IjoxNjM0ODM3OTk0LCJleHAiOjE2MzQ5MjQzOTQsImF1dGhvcml0aWVzIjpbIlJPTEVfVVNFUiJdLCJ2ZWhpY2xlcyI6WyIzIiwiNCJdfQ.gMPj3tqIseV6LbFWzbObKO9IoPZT5WNRIMXFlz-b8fzwENcYcJzPnoJtc6rw2Q_7XQPLjw-QHXjBtk2H5II8Ag","Bearer ",86400));
 
         return new OpenAPI()

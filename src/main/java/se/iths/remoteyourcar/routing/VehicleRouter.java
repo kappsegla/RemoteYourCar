@@ -27,13 +27,11 @@ public class VehicleRouter {
     //https://tesla-api.timdorr.com/
     //https://www.teslaapi.io/
 
-
     private final VehicleService vehicleService;
 
     public VehicleRouter(VehicleService handler) {
         this.vehicleService = handler;
     }
-
 
     @Bean
     public RouterFunction<ServerResponse> routerFunction() {

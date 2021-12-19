@@ -20,9 +20,9 @@ import java.util.function.Predicate;
 @Component
 public class VehicleService {
 
-    private VehicleRepository repository;
+    private final VehicleRepository repository;
 
-    Random random = new Random();
+    final Random random = new Random();
 
     public VehicleService(VehicleRepository repository) {
         this.repository = repository;

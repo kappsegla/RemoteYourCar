@@ -15,14 +15,19 @@ import reactor.core.publisher.Mono;
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+
+    private final SecurityContextRepository securityContextRepository;
+
 
     @Autowired
-    private SecurityContextRepository securityContextRepository;
+    public SecurityConfiguration(AuthenticationManager authenticationManager, SecurityContextRepository securityContextRepository) {
+        this.authenticationManager = authenticationManager;
+        this.securityContextRepository = securityContextRepository;
+    }
 
     @Bean
-    public SecurityWebFilterChain securitygWebFilterChain(ServerHttpSecurity http) {
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
 
         // Disable default security.
         return http.httpBasic().disable()

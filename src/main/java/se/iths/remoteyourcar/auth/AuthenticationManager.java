@@ -15,8 +15,11 @@ import java.util.stream.Collectors;
 @Component
 public class AuthenticationManager implements ReactiveAuthenticationManager {
 
-    @Autowired
-    private JWTUtil jwtUtil;
+    private final JWTUtil jwtUtil;
+
+    public AuthenticationManager(JWTUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     public Mono<Authentication> authenticate(Authentication authentication) {

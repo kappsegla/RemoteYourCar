@@ -2,7 +2,6 @@ package se.iths.remoteyourcar.repositories;
 
 import org.springframework.stereotype.Repository;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.retry.Repeat;
 import reactor.util.retry.Retry;
@@ -19,7 +18,6 @@ import java.util.*;
 @Repository
 public class VehicleRepository {
 
-    Map<Long, VehicleState> vehicleStateMap = new HashMap<>();
     Map<Long, ClimateState> climateStateMap = new HashMap<>();
 
     VehicleCrudRepository vehicleCrudRepository;
@@ -62,9 +60,7 @@ public class VehicleRepository {
     public Mono<Vehicle> findVehicleById(Long carId) {
         Optional<Vehicle> vehicle = vehicleCrudRepository.findById(carId);
         return vehicle.map(Mono::just).orElseGet(
-                () -> createNewVehicle(carId).doOnNext(v -> {
-                    vehicleCrudRepository.save(v);
-                }));
+                () -> createNewVehicle(carId).doOnNext(v -> vehicleCrudRepository.save(v)));
     }
 
     private Mono<Vehicle> createNewVehicle(Long carId) {
