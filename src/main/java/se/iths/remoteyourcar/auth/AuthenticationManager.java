@@ -30,10 +30,6 @@ public class AuthenticationManager implements ReactiveAuthenticationManager {
             if (claims == null) {
                 return Mono.empty();
             }
-            //Check so it hasn't expired
-            Date expires = claims.getBody().getExpiration();
-            if (expires.before(new Date(System.currentTimeMillis())))
-                return Mono.empty();
 
             //Get list of roles for this user
             List<String> perms = (List<String>) claims.getBody().get("authorities");
