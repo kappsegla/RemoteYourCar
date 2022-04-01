@@ -1,4 +1,4 @@
-FROM eclipse-temurin:17
+FROM eclipse-temurin:17-jre-alpine
 RUN adduser --system --group spring
 USER spring:spring
 #ARG DEPENDENCY=target/dependency
